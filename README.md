@@ -168,25 +168,30 @@ Copy-Item .env.example .env
 .\.venv\Scripts\pytest -v
 ```
 
-Exemple de résultat attendu (16 tests passés avec succès) :
+Exemple de résultat attendu (21 tests passés avec succès) :
 ```text
-tests/test_enedis_ingestion.py::test_ingest_enedis_success_with_mock PASSED [  6%]
-tests/test_enedis_ingestion.py::test_ingest_enedis_http_error PASSED     [ 12%]
-tests/test_enedis_ingestion.py::test_ingest_enedis_idempotence PASSED    [ 18%]
-tests/test_environment.py::test_settings_paths PASSED                    [ 25%]
-tests/test_environment.py::test_settings_ensure_directories PASSED       [ 31%]
-tests/test_environment.py::test_settings_urls_configured PASSED          [ 37%]
-tests/test_environment.py::test_logger_setup PASSED                      [ 43%]
-tests/test_rte_ingestion.py::test_inspect_csv_file PASSED                [ 50%]
-tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 56%]
-tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 62%]
-tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [ 68%]
-tests/test_world_bank_ingestion.py::test_inspect_world_bank_payload PASSED [ 75%]
-tests/test_world_bank_ingestion.py::test_ingest_world_bank_success_with_mock PASSED [ 81%]
-tests/test_world_bank_ingestion.py::test_ingest_world_bank_http_error PASSED [ 87%]
-tests/test_world_bank_ingestion.py::test_ingest_world_bank_invalid_structure PASSED [ 93%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_success_with_mock PASSED [  4%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_http_error PASSED     [  9%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_idempotence PASSED    [ 14%]
+tests/test_environment.py::test_settings_paths PASSED                    [ 19%]
+tests/test_environment.py::test_settings_ensure_directories PASSED       [ 23%]
+tests/test_environment.py::test_settings_urls_configured PASSED          [ 28%]
+tests/test_environment.py::test_logger_setup PASSED                      [ 33%]
+tests/test_rte_ingestion.py::test_inspect_csv_file PASSED                [ 38%]
+tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 42%]
+tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 47%]
+tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [ 52%]
+tests/test_transformation.py::TestCleaningUtils::test_clean_column_name_accents_and_units PASSED [ 57%]
+tests/test_transformation.py::TestCleaningUtils::test_clean_column_name_enedis_mappings PASSED [ 61%]
+tests/test_transformation.py::TestRteTransformation::test_rte_silver_transform_filters_forecasts_and_exports_parquet PASSED [ 66%]
+tests/test_transformation.py::TestEnedisTransformation::test_enedis_silver_transform_preserves_strings_and_handles_rejections PASSED [ 71%]
+tests/test_transformation.py::TestWorldBankTransformation::test_world_bank_silver_transform_preserves_missing_and_validates PASSED [ 76%]
+tests/test_world_bank_ingestion.py::test_inspect_world_bank_payload PASSED [ 80%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_success_with_mock PASSED [ 85%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_http_error PASSED [ 90%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_invalid_structure PASSED [ 95%]
 tests/test_world_bank_ingestion.py::test_ingest_world_bank_idempotence PASSED [100%]
-====================== 16 passed in 1.89s ======================
+====================== 21 passed in 1.33s ======================
 ```
 
 ### B. Exécuter l'ingestion du flux RTE éCO2mix National (Bronze)
@@ -258,11 +263,11 @@ BILAN COMPLET DU PIPELINE DE TRANSFORMATION SILVER
   - Statut           : SUCCESS
   - Lignes entrantes : 514,272
   - Lignes valides   : 257,105
-  - Lignes rejetées  : 30
-  - Fichier Parquet  : data/processed/silver_rte_national_30min.parquet (13.3 Mo, compression x6.2)
+  - Lignes rejetées  : 30 (doublons d'horodatage UTC)
+  - Fichier Parquet  : data/processed/silver_rte_national_30min.parquet (11.2 Mo, compression x7.3)
   - Fichier rejets   : data/rejected/rte_rejected_20261011.csv
-  - Colonnes (37)    : perimetre, nature, date, heure, date_heure, consommation_mw...
-  - Durée            : ~4.8 s
+  - Colonnes (24)    : perimetre, nature, date, heure, date_heure, consommation_mw, nucleaire_mw, eolien_mw, solaire_mw... (13 sous-filières absentes en 2012 purgées pour garantir 100% de complétude)
+  - Durée            : ~4.9 s
 
 [Source] ENEDIS_REGISTRE_INSTALLATIONS
   - Statut           : SUCCESS
