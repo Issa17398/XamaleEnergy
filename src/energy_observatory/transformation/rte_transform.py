@@ -161,7 +161,27 @@ def transform_rte_national_bronze_to_silver(
     df_valid.sort_values(by="date_heure", ascending=True, inplace=True)
     df_valid.reset_index(drop=True, inplace=True)
 
-    # 7. Sauvegarde en Couche Silver (Parquet + CSV échantillon)
+    # 7. Élimination des 13 sous-filières vides en 2012 pour garantir un jeu de données 100% complet
+    sub_tech_cols = [
+        "fioul_tac_mw",
+        "fioul_cogeneration_mw",
+        "fioul_autres_mw",
+        "gaz_tac_mw",
+        "gaz_cogeneration_mw",
+        "gaz_ccg_mw",
+        "gaz_autres_mw",
+        "hydraulique_fil_de_l_eau_eclusee_mw",
+        "hydraulique_lacs_mw",
+        "hydraulique_step_turbinage_mw",
+        "bioenergies_dechets_mw",
+        "bioenergies_biomasse_mw",
+        "bioenergies_biogaz_mw",
+    ]
+    dropped_sub = [c for c in sub_tech_cols if c in df_valid.columns]
+    df_valid.drop(columns=dropped_sub, inplace=True)
+    logger.info(f"[RTE Silver] {len(dropped_sub)} sous-filières éliminées pour homogénéité 2012-2026")
+
+    # 8. Sauvegarde en Couche Silver (Parquet + CSV échantillon)
     silver_output_path = dest_dir / "silver_rte_national_30min.parquet"
     df_valid.to_parquet(silver_output_path, engine="pyarrow", index=False)
 
