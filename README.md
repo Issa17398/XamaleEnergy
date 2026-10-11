@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Etalab%202.0%20%2F%20MIT-green.svg)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/)
 [![Architecture](https://img.shields.io/badge/architecture-Medallion%20(Bronze%20%2F%20Silver%20%2F%20Gold)-orange.svg)](#architecture-data-engineering)
-[![Status](https://img.shields.io/badge/phase-Phase%202%20(Environnement%20Validé)-success.svg)](#feuille-de-route-et-avancement)
+[![Status](https://img.shields.io/badge/phase-Phase%203%20(Ingestion%20RTE%20Validée)-success.svg)](#feuille-de-route-et-avancement)
 
 ---
 
@@ -108,13 +108,17 @@ French_energy/
 ├── src/
 │   └── energy_observatory/
 │       ├── __init__.py
+│       ├── ingestion/
+│       │   ├── __init__.py
+│       │   └── rte.py              # Ingestion résiliente RTE éCO2mix (Couche Bronze)
 │       └── utils/
 │           ├── __init__.py
 │           └── logging_config.py   # Configuration standardisée des logs (console + fichier)
 │
 └── tests/
     ├── __init__.py
-    └── test_environment.py    # Tests automatisés de l'environnement et des settings
+    ├── test_environment.py        # Tests automatisés de l'environnement et des settings
+    └── test_rte_ingestion.py      # Tests d'ingestion RTE (streaming, SHA-256, résilience HTTP)
 ```
 
 ---
@@ -153,26 +157,49 @@ Copy-Item .env.example .env
 
 ---
 
-## 6. Vérification et Exécution des Tests
+## 6. Vérification, Ingestion et Exécution des Tests
 
-Pour vérifier que l'environnement, les chemins, les logs et la configuration sont parfaitement opérationnels :
-
+### A. Lancer la suite complète de tests unitaires (`pytest`)
 ```powershell
 .\.venv\Scripts\pytest -v
 ```
 
-Exemple de sortie attendue :
+Exemple de résultat attendu (8 tests passés avec succès) :
 ```text
-tests/test_environment.py::test_settings_paths PASSED
-tests/test_environment.py::test_settings_ensure_directories PASSED
-tests/test_environment.py::test_settings_urls_configured PASSED
-tests/test_environment.py::test_logger_setup PASSED
-============================== 4 passed in 0.12s ==============================
+tests/test_environment.py::test_settings_paths PASSED                    [ 12%]
+tests/test_environment.py::test_settings_ensure_directories PASSED       [ 25%]
+tests/test_environment.py::test_settings_urls_configured PASSED          [ 37%]
+tests/test_environment.py::test_logger_setup PASSED                      [ 50%]
+tests/test_rte_ingestion.py::test_inspect_csv_file PASSED                [ 62%]
+tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 75%]
+tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 87%]
+tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [100%]
+============================== 8 passed in 0.46s ==============================
 ```
 
-Pour tester l'affichage des logs en mode interactif :
+### B. Exécuter l'ingestion réelle du flux RTE éCO2mix National (Bronze)
 ```powershell
-.\.venv\Scripts\python -c "from src.energy_observatory.utils.logging_config import setup_logger; logger = setup_logger(); logger.info('Observatoire Énergétique initialisé avec succès !')"
+.\.venv\Scripts\python -m src.energy_observatory.ingestion.rte
+```
+
+> **Options disponibles :**
+> - Exécution normale : vérifie si le fichier du jour existe déjà (`data/raw/rte/rte_national_YYYYMMDD.csv`). Si oui, évite le téléchargement redondant (idempotence).
+> - Forcer le re-téléchargement :
+>   ```powershell
+>   .\.venv\Scripts\python -m src.energy_observatory.ingestion.rte --force
+>   ```
+
+Exemple de rapport d'ingestion généré :
+```text
+--- Rapport d'ingestion ---
+Statut : SUCCESS
+Source : RTE_ECO2MIX_NATIONAL
+Fichier brut : .../data/raw/rte/rte_national_20261011.csv
+Taille : 81.97 Mo
+SHA-256 : b59dc719a0bf5dc6203dd715ff87be9c405026af58ab25c7bf54a61dc2ff3ca6
+Nombre de lignes : 514,272
+Nombre de colonnes : 37
+Durée : ~50 s
 ```
 
 ---
@@ -182,8 +209,8 @@ Pour tester l'affichage des logs en mode interactif :
 - [x] **Phase 0 — Diagnostic de l'environnement & Cadrage technique** (Python 3.13, Docker, Git, architecture Medallion retenue).
 - [x] **Phase 1 — Audit complet des 3 sources de données** (Vérification des APIs RTE, Enedis, Banque Mondiale; rédaction de [docs/sources.md](docs/sources.md)).
 - [x] **Phase 2 — Mise en place de l'environnement & Outillage** (`pyproject.toml`, `.gitignore`, `.env`, `settings.py`, `logging_config.py`, tests automatisés).
-- [ ] **Phase 3 — Première Ingestion : RTE éCO2mix National (Bronze)** *(Prochaine étape)*.
-- [ ] **Phase 4 — Ingestion : Enedis Registre National (Bronze)**.
+- [x] **Phase 3 — Première Ingestion : RTE éCO2mix National (Bronze)** (Module streaming résilient, 514 272 lignes, 37 colonnes, métadonnées JSON, tests validés).
+- [ ] **Phase 4 — Ingestion : Enedis Registre National (Bronze)** *(Prochaine étape)*.
 - [ ] **Phase 5 — Ingestion : Banque Mondiale (Bronze)**.
 - [ ] **Phase 6 — Pipeline de Transformation Silver** (Nettoyage, harmonisation des pas 30 min, détection des anomalies).
 - [ ] **Phase 7 — Modélisation et Stockage PostgreSQL** (Couche Gold, modélisation dimensionnelle).
