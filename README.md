@@ -303,6 +303,35 @@ Un outil d'exploration analytique dédié permet d'inspecter en direct les volum
 .\.venv\Scripts\python -m src.energy_observatory.analysis.inspect_silver --source rejects
 ```
 
+### G. Modélisation et Stockage PostgreSQL (Couche Gold)
+Pour démarrer la base de données PostgreSQL isolée dans Docker et charger le modèle en étoile :
+
+1. **Démarrer le conteneur PostgreSQL 16 (avec initialisation automatique DDL)** :
+```powershell
+docker compose up -d
+```
+
+2. **Exécuter le pipeline de chargement Silver vers Gold** :
+```powershell
+.\.venv\Scripts\python -m src.energy_observatory.storage.load_gold
+```
+
+Exemple de rapport attendu :
+```text
+============================================================
+BILAN DU CHARGEMENT GOLD POSTGRESQL
+============================================================
+Statut                  : SUCCESS
+gold.dim_temps          : 257,105 lignes
+gold.dim_geographie     : 14,834 communes
+gold.dim_filiere        : 11 technologies de référence
+gold.fact_electricite   : 257,105 lignes
+gold.fact_registre      : 125,885 installations
+gold.fact_worldbank     : 66 observations
+Vues analytiques créées : gold.v_mix_energetique_mensuel, gold.v_capacites_par_region
+============================================================
+```
+
 ---
 
 ## 7. Règles Métier Appliquées en Couche Silver
@@ -327,8 +356,8 @@ Un outil d'exploration analytique dédié permet d'inspecter en direct les volum
 - [x] **Phase 4 — Ingestion : Enedis Registre National (Bronze)** (Millésime 31/12/2025, 125 930 installations, 51 colonnes, métadonnées JSON, tests validés).
 - [x] **Phase 5 — Ingestion : Banque Mondiale (Bronze)** (API REST, 66 points 1960-2025, préservation des nulls, métadonnées JSON, tests validés).
 - [x] **Phase 6 — Pipeline de Transformation Silver** (Nettoyage snake_case, typage strict, gestion des auxiliaires, quarantaine des rejets, export Parquet compressé x6.2, 21 tests unitaires validés).
-- [ ] **Phase 7 — Modélisation et Stockage PostgreSQL** *(Prochaine étape)* (Conteneur Docker, schémas Bronze/Silver/Gold, modélisation dimensionnelle étoiles, faits et dimensions).
-- [ ] **Phase 8 — Contrôle Qualité & Fiabilité** (Tests de validation, règles métier, rapports qualité).
+- [x] **Phase 7 — Modélisation et Stockage PostgreSQL (Couche Gold)** (Docker Compose PostgreSQL 16, modèle dimensionnel en étoile, DDL schémas/tables/vues, loader optimisé COPY, 27 tests unitaires validés).
+- [ ] **Phase 8 — Contrôle Qualité & Fiabilité** *(Prochaine étape)* (Tests de validation automatique Great Expectations / suites de validation des métriques, reporting qualité).
 - [ ] **Phase 9 — Pipeline Complet & Automatisation**.
 - [ ] **Phase 10 — Backend FastAPI**.
 - [ ] **Phase 11 — Frontend React Dashboard**.
