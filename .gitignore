@@ -1,0 +1,82 @@
+# ==============================================================================
+# Environnements virtuels
+# ==============================================================================
+.venv/
+venv/
+env/
+ENV/
+
+# ==============================================================================
+# Données locales (Architecture Medallion Bronze / Silver / Gold)
+# On ignore les fichiers de données volumineux mais on conserve l'arborescence via .gitkeep
+# ==============================================================================
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/rte/.gitkeep
+!data/raw/enedis/.gitkeep
+!data/raw/world_bank/.gitkeep
+
+data/processed/*
+!data/processed/.gitkeep
+
+data/rejected/*
+!data/rejected/.gitkeep
+
+# ==============================================================================
+# Secrets et variables d'environnement
+# ==============================================================================
+.env
+*.local
+
+# ==============================================================================
+# Logs d'exécution
+# ==============================================================================
+logs/
+*.log
+
+# ==============================================================================
+# Cache Python et compilation
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==============================================================================
+# Tests, typage et qualité
+# ==============================================================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+
+# ==============================================================================
+# IDE et système d'exploitation
+# ==============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

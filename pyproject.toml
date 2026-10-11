@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "energy-observatory-fr"
+version = "0.1.0"
+description = "Observatoire des données énergétiques de la France : pipeline ETL/ELT et analyses"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Observatoire Énergie"}
+]
+dependencies = [
+    "requests>=2.31.0",
+    "pandas>=2.2.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "responses>=0.25.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = "-v --tb=short"
