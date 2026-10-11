@@ -228,9 +228,78 @@ Période couverte : 1960 - 2025
 Durée : ~2 s
 ```
 
+```
+
+### E. Exécuter le pipeline de transformation Silver (Toutes les sources)
+Pour transformer l'ensemble des données brutes Bronze en jeux de données nettoyés, typés et optimisés au format Parquet :
+```powershell
+.\.venv\Scripts\python -m src.energy_observatory.transformation.run_all
+```
+
+Vous pouvez également lancer la transformation d'une source spécifique de manière autonome :
+```powershell
+# Transformation RTE éCO2mix (Pas 30 min, typage, gestion des auxiliaires)
+.\.venv\Scripts\python -m src.energy_observatory.transformation.rte_transform
+
+# Transformation Enedis Registre National (Codes géographiques préservés, dates ISO)
+.\.venv\Scripts\python -m src.energy_observatory.transformation.enedis_transform
+
+# Transformation Banque Mondiale (Aplatissement, indicateurs is_missing, tri chronologique)
+.\.venv\Scripts\python -m src.energy_observatory.transformation.world_bank_transform
+```
+
+Exemple de bilan généré en sortie de pipeline :
+```text
+======================================================================
+BILAN COMPLET DU PIPELINE DE TRANSFORMATION SILVER
+======================================================================
+
+[Source] RTE_ECO2MIX_NATIONAL
+  - Statut           : SUCCESS
+  - Lignes entrantes : 514,272
+  - Lignes valides   : 257,105
+  - Lignes rejetées  : 30
+  - Fichier Parquet  : data/processed/silver_rte_national_30min.parquet (13.3 Mo, compression x6.2)
+  - Fichier rejets   : data/rejected/rte_rejected_20261011.csv
+  - Colonnes (37)    : perimetre, nature, date, heure, date_heure, consommation_mw...
+  - Durée            : ~4.8 s
+
+[Source] ENEDIS_REGISTRE_INSTALLATIONS
+  - Statut           : SUCCESS
+  - Lignes entrantes : 125,930
+  - Lignes valides   : 125,930
+  - Lignes rejetées  : 0
+  - Fichier Parquet  : data/processed/silver_enedis_registre_2025.parquet (6.1 Mo, compression x6.3)
+  - Colonnes (51)    : nom_installation, code_eic, code_iris, code_insee_commune...
+  - Durée            : ~2.4 s
+
+[Source] WORLDBANK_ACCESS_ELECTRICITY
+  - Statut           : SUCCESS
+  - Lignes entrantes : 66
+  - Lignes valides   : 66
+  - Lignes rejetées  : 0
+  - Fichier Parquet  : data/processed/silver_worldbank_access_electricity.parquet (6 Ko)
+  - Colonnes (9)     : indicator_id, indicator_name, country_iso2, year, valeur_pct, is_missing...
+  - Durée            : ~0.01 s
+======================================================================
+```
+
 ---
 
-## 7. Feuille de Route et Avancement
+## 7. Règles Métier Appliquées en Couche Silver
+
+| Source | Règle Métier & Justification | Traitement appliqué |
+|---|---|---|
+| **RTE** | **Granularité mixte (15 min vs 30 min)** : à :15 et :45, seules les prévisions sont publiées. La réalisation effective n'existe qu'à :00 et :30. | Isolation des 257 105 mesures réelles (`consommation_mw.notna()`) pour les tables de faits historiques. |
+| **RTE** | **Soutirage d'auxiliaires à l'arrêt** : la nuit, les onduleurs solaires consomment ~-1 MW sur le réseau; les centrales thermiques à l'arrêt consomment ~-15 MW d'auxiliaires. | Clamping de la production brute à `0.0 MW`. Les aberrations physiques sévères (< -500 MW) sont rejetées. |
+| **Enedis** | **Codes géographiques administratifs** : les codes de communes ou départements (`01`, `2A`, `974`) perdent leur zéro initial s'ils sont convertis en entiers. | Typage strict forcé en `string` dès la lecture CSV. |
+| **Enedis** | **Unités de puissance** : les puissances installées sont en **kW** (inventaire de capacité), contrairement à RTE qui est en **MW** (flux d'énergie). | Suffixe explicite `puis_max_installee_kw` et typage float64. |
+| **Banque Mondiale** | **Historique avec trous de collecte** : l'accès à l'électricité n'est mesuré que depuis 1990 (35 années valides sur 66). | Conservation des 66 points avec un indicateur booléen `is_missing` pour intégrité statistique. |
+| **Toutes** | **Optimisation du stockage analytique** : les fichiers CSV bruts (~120 Mo) sont lourds à requêter. | Conversion au format Apache Parquet (Snappy), réduisant l'empreinte disque globale à ~19.4 Mo (gain x6.2). |
+
+---
+
+## 8. Feuille de Route et Avancement
 
 - [x] **Phase 0 — Diagnostic de l'environnement & Cadrage technique** (Python 3.13, Docker, Git, architecture Medallion retenue).
 - [x] **Phase 1 — Audit complet des 3 sources de données** (Vérification des APIs RTE, Enedis, Banque Mondiale; rédaction de [docs/sources.md](docs/sources.md)).
@@ -238,10 +307,11 @@ Durée : ~2 s
 - [x] **Phase 3 — Première Ingestion : RTE éCO2mix National (Bronze)** (Module streaming résilient, 514 272 lignes, 37 colonnes, métadonnées JSON, tests validés).
 - [x] **Phase 4 — Ingestion : Enedis Registre National (Bronze)** (Millésime 31/12/2025, 125 930 installations, 51 colonnes, métadonnées JSON, tests validés).
 - [x] **Phase 5 — Ingestion : Banque Mondiale (Bronze)** (API REST, 66 points 1960-2025, préservation des nulls, métadonnées JSON, tests validés).
-- [ ] **Phase 6 — Pipeline de Transformation Silver** *(Prochaine étape)* (Nettoyage, harmonisation des pas 30 min, détection des anomalies).
-- [ ] **Phase 7 — Modélisation et Stockage PostgreSQL** (Couche Gold, modélisation dimensionnelle).
+- [x] **Phase 6 — Pipeline de Transformation Silver** (Nettoyage snake_case, typage strict, gestion des auxiliaires, quarantaine des rejets, export Parquet compressé x6.2, 21 tests unitaires validés).
+- [ ] **Phase 7 — Modélisation et Stockage PostgreSQL** *(Prochaine étape)* (Conteneur Docker, schémas Bronze/Silver/Gold, modélisation dimensionnelle étoiles, faits et dimensions).
 - [ ] **Phase 8 — Contrôle Qualité & Fiabilité** (Tests de validation, règles métier, rapports qualité).
 - [ ] **Phase 9 — Pipeline Complet & Automatisation**.
 - [ ] **Phase 10 — Backend FastAPI**.
 - [ ] **Phase 11 — Frontend React Dashboard**.
 - [ ] **Phase 12 — Industrialisation Docker & Déploiement**.
+
