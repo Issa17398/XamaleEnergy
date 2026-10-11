@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Etalab%202.0%20%2F%20MIT-green.svg)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/)
 [![Architecture](https://img.shields.io/badge/architecture-Medallion%20(Bronze%20%2F%20Silver%20%2F%20Gold)-orange.svg)](#architecture-data-engineering)
-[![Status](https://img.shields.io/badge/phase-Phase%206%20(Couche%20Silver%20Validée)-success.svg)](#feuille-de-route-et-avancement)
+[![Status](https://img.shields.io/badge/phase-Phase%209%20(Pipeline%20End--to--End%20Validé)-success.svg)](#feuille-de-route-et-avancement)
 
 ---
 
@@ -374,6 +374,41 @@ Rapports d'audit générés :
   - data/reports/data_quality_report_20261011.json
 ```
 
+### I. Exécuter le Pipeline Complet End-to-End (Toutes les Couches)
+Un orchestrateur central permet d'exécuter l'intégralité du cycle de vie de la donnée (Bronze -> Silver -> Gold -> Quality) en une seule commande avec rapport consolidé :
+
+```powershell
+# Exécuter l'ensemble du pipeline (Bronze -> Silver -> Gold -> Qualité)
+.\.venv\Scripts\python -m src.energy_observatory.pipeline --stage all
+
+# Ou exécuter une étape ciblée
+.\.venv\Scripts\python -m src.energy_observatory.pipeline --stage bronze
+.\.venv\Scripts\python -m src.energy_observatory.pipeline --stage silver
+.\.venv\Scripts\python -m src.energy_observatory.pipeline --stage gold
+.\.venv\Scripts\python -m src.energy_observatory.pipeline --stage quality
+
+# Option pour forcer le re-téléchargement des sources Bronze
+.\.venv\Scripts\python -m src.energy_observatory.pipeline --stage all --force
+```
+
+Exemple de rapport consolidé :
+```text
+======================================================================
+BILAN D'EXÉCUTION DU PIPELINE DE DONNÉES (END-TO-END)
+======================================================================
+Statut Global        : SUCCESS
+Durée Totale         : 71.85 s
+Score Qualité Final  : 100.00%
+----------------------------------------------------------------------
+Étape                      | Statut    | Durée    | Détails
+----------------------------------------------------------------------
+1. BRONZE_INGESTION        | [OK]      |  0.60 s | RTE: 514,272 lig., Enedis: 125,930 lig.
+2. SILVER_TRANSFORMATION   | [OK]      | 18.85 s | Parquet générés (RTE 257k, Enedis 125k, WB 66)
+3. GOLD_LOADING            | [OK]      | 51.75 s | PostgreSQL: 257,105 faits, 26,829 communes
+4. QUALITY_VALIDATION      | [OK]      |  0.65 s | Score: 100.0% (10/10 règles)
+======================================================================
+```
+
 ---
 
 ## 7. Règles Métier Appliquées en Couche Silver
@@ -400,8 +435,8 @@ Rapports d'audit générés :
 - [x] **Phase 6 — Pipeline de Transformation Silver** (Nettoyage snake_case, typage strict, gestion des auxiliaires, quarantaine des rejets, export Parquet compressé x6.2, 21 tests unitaires validés).
 - [x] **Phase 7 — Modélisation et Stockage PostgreSQL (Couche Gold)** (Docker Compose PostgreSQL 16, modèle dimensionnel en étoile, DDL schémas/tables/vues, loader optimisé COPY, 27 tests unitaires validés).
 - [x] **Phase 8 — Contrôle Qualité, Validation Automatique & Fiabilité** (10 règles SQL automatisées, équilibre physique du réseau validé, rapports d'audit JSON/Markdown, 31 tests unitaires validés).
-- [ ] **Phase 9 — Pipeline Complet & Automatisation** *(Prochaine étape)* (Orchestrateur unifié end-to-end, CLI tout-en-un, idempotence et reprises sur incident).
-- [ ] **Phase 10 — Backend FastAPI**.
+- [x] **Phase 9 — Pipeline Complet & Automatisation** (Orchestrateur unifié end-to-end, CLI tout-en-un avec `--stage`, bilan d'exécution synthétique, 36 tests unitaires validés).
+- [ ] **Phase 10 — Backend FastAPI** *(Prochaine étape)*.
 - [ ] **Phase 11 — Frontend React Dashboard**.
 - [ ] **Phase 12 — Industrialisation Docker & Déploiement**.
 
