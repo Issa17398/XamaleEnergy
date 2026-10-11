@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Etalab%202.0%20%2F%20MIT-green.svg)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/)
 [![Architecture](https://img.shields.io/badge/architecture-Medallion%20(Bronze%20%2F%20Silver%20%2F%20Gold)-orange.svg)](#architecture-data-engineering)
-[![Status](https://img.shields.io/badge/phase-Phase%203%20(Ingestion%20RTE%20Validée)-success.svg)](#feuille-de-route-et-avancement)
+[![Status](https://img.shields.io/badge/phase-Phase%204%20(Ingestion%20Enedis%20Validée)-success.svg)](#feuille-de-route-et-avancement)
 
 ---
 
@@ -110,7 +110,8 @@ French_energy/
 │       ├── __init__.py
 │       ├── ingestion/
 │       │   ├── __init__.py
-│       │   └── rte.py              # Ingestion résiliente RTE éCO2mix (Couche Bronze)
+│       │   ├── rte.py              # Ingestion résiliente RTE éCO2mix (Couche Bronze)
+│       │   └── enedis.py           # Ingestion Registre National des installations (Couche Bronze)
 │       └── utils/
 │           ├── __init__.py
 │           └── logging_config.py   # Configuration standardisée des logs (console + fichier)
@@ -118,7 +119,8 @@ French_energy/
 └── tests/
     ├── __init__.py
     ├── test_environment.py        # Tests automatisés de l'environnement et des settings
-    └── test_rte_ingestion.py      # Tests d'ingestion RTE (streaming, SHA-256, résilience HTTP)
+    ├── test_rte_ingestion.py      # Tests d'ingestion RTE (streaming, SHA-256, résilience HTTP)
+    └── test_enedis_ingestion.py   # Tests d'ingestion Enedis (millésime 2025, idempotence)
 ```
 
 ---
@@ -164,42 +166,52 @@ Copy-Item .env.example .env
 .\.venv\Scripts\pytest -v
 ```
 
-Exemple de résultat attendu (8 tests passés avec succès) :
+Exemple de résultat attendu (11 tests passés avec succès) :
 ```text
-tests/test_environment.py::test_settings_paths PASSED                    [ 12%]
-tests/test_environment.py::test_settings_ensure_directories PASSED       [ 25%]
-tests/test_environment.py::test_settings_urls_configured PASSED          [ 37%]
-tests/test_environment.py::test_logger_setup PASSED                      [ 50%]
-tests/test_rte_ingestion.py::test_inspect_csv_file PASSED                [ 62%]
-tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 75%]
-tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 87%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_success_with_mock PASSED [  9%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_http_error PASSED     [ 18%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_idempotence PASSED    [ 27%]
+tests/test_environment.py::test_settings_paths PASSED                    [ 36%]
+tests/test_environment.py::test_settings_ensure_directories PASSED       [ 45%]
+tests/test_environment.py::test_settings_urls_configured PASSED          [ 54%]
+tests/test_environment.py::test_logger_setup PASSED                      [ 63%]
+tests/test_rte_ingestion.py::test_inspect_csv_file PASSED                [ 72%]
+tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 81%]
+tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 90%]
 tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [100%]
-============================== 8 passed in 0.46s ==============================
+====================== 11 passed in 0.55s ======================
 ```
 
-### B. Exécuter l'ingestion réelle du flux RTE éCO2mix National (Bronze)
+### B. Exécuter l'ingestion du flux RTE éCO2mix National (Bronze)
 ```powershell
 .\.venv\Scripts\python -m src.energy_observatory.ingestion.rte
 ```
 
 > **Options disponibles :**
-> - Exécution normale : vérifie si le fichier du jour existe déjà (`data/raw/rte/rte_national_YYYYMMDD.csv`). Si oui, évite le téléchargement redondant (idempotence).
-> - Forcer le re-téléchargement :
->   ```powershell
->   .\.venv\Scripts\python -m src.energy_observatory.ingestion.rte --force
->   ```
+> - Exécution normale : vérifie si le fichier existe déjà. Idempotence automatique.
+> - Forcer le re-téléchargement : `.\.venv\Scripts\python -m src.energy_observatory.ingestion.rte --force`
+
+### C. Exécuter l'ingestion du Registre National Enedis (Bronze)
+```powershell
+.\.venv\Scripts\python -m src.energy_observatory.ingestion.enedis
+```
+
+> **Options disponibles :**
+> - Exécution normale : vérifie si le fichier existe déjà. Idempotence automatique.
+> - Forcer le re-téléchargement : `.\.venv\Scripts\python -m src.energy_observatory.ingestion.enedis --force`
 
 Exemple de rapport d'ingestion généré :
 ```text
---- Rapport d'ingestion ---
+--- Rapport d'ingestion Registre National ---
 Statut : SUCCESS
-Source : RTE_ECO2MIX_NATIONAL
-Fichier brut : .../data/raw/rte/rte_national_20261011.csv
-Taille : 81.97 Mo
-SHA-256 : b59dc719a0bf5dc6203dd715ff87be9c405026af58ab25c7bf54a61dc2ff3ca6
-Nombre de lignes : 514,272
-Nombre de colonnes : 37
-Durée : ~50 s
+Source : ENEDIS_REGISTRE_INSTALLATIONS
+Millésime : 2025-12-31
+Fichier brut : .../data/raw/enedis/enedis_registre_2025_20261011.csv
+Taille : 38.65 Mo
+SHA-256 : 2e5464e4e556f9ecf47d4f3c76d0dd0119f6f1a4d973c3f483addac302b4e702
+Nombre de lignes : 125,930
+Nombre de colonnes : 51
+Durée : ~11 s
 ```
 
 ---
@@ -210,8 +222,8 @@ Durée : ~50 s
 - [x] **Phase 1 — Audit complet des 3 sources de données** (Vérification des APIs RTE, Enedis, Banque Mondiale; rédaction de [docs/sources.md](docs/sources.md)).
 - [x] **Phase 2 — Mise en place de l'environnement & Outillage** (`pyproject.toml`, `.gitignore`, `.env`, `settings.py`, `logging_config.py`, tests automatisés).
 - [x] **Phase 3 — Première Ingestion : RTE éCO2mix National (Bronze)** (Module streaming résilient, 514 272 lignes, 37 colonnes, métadonnées JSON, tests validés).
-- [ ] **Phase 4 — Ingestion : Enedis Registre National (Bronze)** *(Prochaine étape)*.
-- [ ] **Phase 5 — Ingestion : Banque Mondiale (Bronze)**.
+- [x] **Phase 4 — Ingestion : Enedis Registre National (Bronze)** (Millésime 31/12/2025, 125 930 installations, 51 colonnes, métadonnées JSON, tests validés).
+- [ ] **Phase 5 — Ingestion : Banque Mondiale (Bronze)** *(Prochaine étape)*.
 - [ ] **Phase 6 — Pipeline de Transformation Silver** (Nettoyage, harmonisation des pas 30 min, détection des anomalies).
 - [ ] **Phase 7 — Modélisation et Stockage PostgreSQL** (Couche Gold, modélisation dimensionnelle).
 - [ ] **Phase 8 — Contrôle Qualité & Fiabilité** (Tests de validation, règles métier, rapports qualité).
