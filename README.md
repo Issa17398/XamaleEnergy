@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Etalab%202.0%20%2F%20MIT-green.svg)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/)
 [![Architecture](https://img.shields.io/badge/architecture-Medallion%20(Bronze%20%2F%20Silver%20%2F%20Gold)-orange.svg)](#architecture-data-engineering)
-[![Status](https://img.shields.io/badge/phase-Phase%209%20(Pipeline%20End--to--End%20Validé)-success.svg)](#feuille-de-route-et-avancement)
+[![Status](https://img.shields.io/badge/phase-Phase%2010%20(Backend%20FastAPI%20Validé)-success.svg)](#feuille-de-route-et-avancement)
 
 ---
 
@@ -424,7 +424,38 @@ Score Qualité Final  : 100.00%
 
 ---
 
-## 8. Feuille de Route et Avancement
+## 8. Backend API REST (FastAPI)
+
+Le backend expose l'ensemble des données de la couche Gold (tables de faits, dimensions et vues analytiques) via une API RESTful haute performance construite avec **FastAPI**, validée par **Pydantic v2** et servie par **Uvicorn**.
+
+### Démarrage du Serveur API
+
+```powershell
+# Lancement du serveur en mode développement avec rechargement automatique
+.\.venv\Scripts\uvicorn src.energy_observatory.api.main:app --reload --port 8000
+```
+
+- **Documentation Interactive (Swagger UI)** : [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Documentation ReDoc** : [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **Spécification OpenAPI 3** : [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+
+### Catalogue des Endpoints Disponibles
+
+| Méthode | Route | Rôle Métier & Paramètres | Modèle de Réponse |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Métadonnées de l'API, version et annuaire des endpoints | JSON informatif |
+| `GET` | `/health` / `/api/v1/health` | Diagnostic de santé, connectivité PostgreSQL et comptage des 6 tables | `HealthResponse` |
+| `GET` | `/api/v1/metrics/latest` | Snapshot instantané du réseau : consommation, production, % décarboné, flux transfrontaliers, CO2 | `LatestMetricsResponse` |
+| `GET` | `/api/v1/mix/history` | Séries temporelles 30 min (filtres `start_date`, `end_date`, `limit` max 2000) | `MixHistoryResponse` |
+| `GET` | `/api/v1/mix/monthly` | Historique mensuel consolidé 2012-2026 (filtres `annee`, `limit`) | `MonthlyMixResponse` |
+| `GET` | `/api/v1/capacities/regional` | Capacités installées par région et filière (filtres `code_region`, `code_filiere`) | `RegionalCapacitiesResponse` |
+| `GET` | `/api/v1/capacities/summary` | Synthèse nationale des puissances installées par catégorie énergétique | `CapacitiesSummaryResponse` |
+| `GET` | `/api/v1/international/access` | Évolution du taux d'accès à l'électricité en France (filtres `annee_min`, `annee_max`) | `InternationalAccessResponse` |
+| `GET` | `/api/v1/quality/report` | Rapport des 10 règles de validation de données (paramètre `refresh=true` pour audit en direct) | `QualityReportResponse` |
+
+---
+
+## 9. Feuille de Route et Avancement
 
 - [x] **Phase 0 — Diagnostic de l'environnement & Cadrage technique** (Python 3.13, Docker, Git, architecture Medallion retenue).
 - [x] **Phase 1 — Audit complet des 3 sources de données** (Vérification des APIs RTE, Enedis, Banque Mondiale; rédaction de [docs/sources.md](docs/sources.md)).
@@ -436,7 +467,8 @@ Score Qualité Final  : 100.00%
 - [x] **Phase 7 — Modélisation et Stockage PostgreSQL (Couche Gold)** (Docker Compose PostgreSQL 16, modèle dimensionnel en étoile, DDL schémas/tables/vues, loader optimisé COPY, 27 tests unitaires validés).
 - [x] **Phase 8 — Contrôle Qualité, Validation Automatique & Fiabilité** (10 règles SQL automatisées, équilibre physique du réseau validé, rapports d'audit JSON/Markdown, 31 tests unitaires validés).
 - [x] **Phase 9 — Pipeline Complet & Automatisation** (Orchestrateur unifié end-to-end, CLI tout-en-un avec `--stage`, bilan d'exécution synthétique, 36 tests unitaires validés).
-- [ ] **Phase 10 — Backend FastAPI** *(Prochaine étape)*.
-- [ ] **Phase 11 — Frontend React Dashboard**.
+- [x] **Phase 10 — Backend FastAPI** (API RESTful modulaire, 9 routeurs/endpoints, CORS configuré, validation Pydantic v2, 51 tests unitaires avec 94% de couverture).
+- [ ] **Phase 11 — Frontend React Dashboard** *(Prochaine étape)*.
 - [ ] **Phase 12 — Industrialisation Docker & Déploiement**.
+
 
