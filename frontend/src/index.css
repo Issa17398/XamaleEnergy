@@ -1,0 +1,217 @@
+/* ==============================================================================
+   Design System & Tokens - Observatoire Énergétique de France
+   Palette & Identité Visuelle dérivées du Logo Xamale (Deep Navy & Radiant Gold)
+   ============================================================================== */
+
+:root {
+  /* Palette de Base - Xamale Navy & Gold */
+  --bg-deep: #050c18;
+  --bg-surface: #0a172c;
+  --bg-card: rgba(13, 27, 49, 0.72);
+  --bg-card-hover: rgba(18, 36, 65, 0.88);
+  --bg-glass: rgba(10, 24, 46, 0.65);
+  
+  /* Accents Or Lumineux (Étoile et Épis du Logo) */
+  --gold-primary: #F5B82E;
+  --gold-light: #FFD269;
+  --gold-dark: #C99119;
+  --gold-glow: rgba(245, 184, 46, 0.28);
+  --gold-subtle: rgba(245, 184, 46, 0.12);
+
+  /* Navy Bleu & Métal */
+  --navy-accent: #1E3A8A;
+  --navy-light: #2563EB;
+  --navy-glow: rgba(37, 99, 235, 0.25);
+
+  /* Typographie */
+  --text-main: #FFFFFF;
+  --text-secondary: #CBD5E1;
+  --text-muted: #8493A8;
+  --text-gold: #FCD34D;
+
+  /* Bordures & Séparateurs */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(255, 255, 255, 0.12);
+  --border-gold: rgba(245, 184, 46, 0.35);
+  --border-gold-strong: rgba(245, 184, 46, 0.75);
+
+  /* Filières Énergétiques */
+  --color-nucleaire: #38BDF8;
+  --color-eolien: #60A5FA;
+  --color-solaire: #FBBF24;
+  --color-hydraulique: #0284C7;
+  --color-bioenergies: #34D399;
+  --color-gaz: #F97316;
+  --color-charbon: #64748B;
+  --color-fioul: #E11D48;
+  --color-pompage: #A855F7;
+  --color-decarbone: #10B981;
+  --color-co2: #EC4899;
+
+  /* Ombres & Élévation */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 0 24px rgba(245, 184, 46, 0.22);
+
+  /* Rayons & Transitions */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset & Styles Globaux */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-deep);
+  background-image: 
+    radial-gradient(circle at 15% 10%, rgba(245, 184, 46, 0.07) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(30, 58, 138, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 50% 90%, rgba(10, 25, 47, 0.8) 0%, transparent 60%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .brand-font {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Barre de défilement stylisée */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-surface);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-gold);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-dark);
+}
+
+/* Utilitaires Glassmorphism */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.glass-panel:hover {
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-gold), var(--shadow-md);
+}
+
+/* Animations d'Apparition */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(245, 184, 46, 0.4);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(245, 184, 46, 0.85);
+    opacity: 0.85;
+  }
+}
+
+@keyframes liveDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.6;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.pulse-gold {
+  animation: pulseGlow 2.5s infinite;
+}
+
+/* Boutons & Liens Interactifs */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+  color: #050C18;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 10px rgba(245, 184, 46, 0.35);
+  transition: all var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+  box-shadow: 0 4px 18px rgba(245, 184, 46, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 8px 16px;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: rgba(245, 184, 46, 0.12);
+  border-color: var(--border-gold);
+  color: var(--gold-light);
+}

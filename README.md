@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Etalab%202.0%20%2F%20MIT-green.svg)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/)
 [![Architecture](https://img.shields.io/badge/architecture-Medallion%20(Bronze%20%2F%20Silver%20%2F%20Gold)-orange.svg)](#architecture-data-engineering)
-[![Status](https://img.shields.io/badge/phase-Phase%2010%20(Backend%20FastAPI%20Validé)-success.svg)](#feuille-de-route-et-avancement)
+[![Status](https://img.shields.io/badge/phase-Phase%2011%20(Frontend%20React%20Validé)-success.svg)](#feuille-de-route-et-avancement)
 
 ---
 
@@ -455,7 +455,47 @@ Le backend expose l'ensemble des données de la couche Gold (tables de faits, di
 
 ---
 
-## 9. Feuille de Route et Avancement
+## 9. Frontend React Dashboard (Thème & Identité Xamale)
+
+Le tableau de bord web interactif est développé en **React + Vite**, stylisé en **Vanilla CSS / CSS Modules haute fidélité** avec la palette chromatique dérivée du **logo Xamale** (Midnight Deep Navy `#050C18`, Radiant Gold `#F5B82E`, Glassmorphism `#0D1B31`, typographies Google Fonts *Outfit* et *Inter*).
+
+### Démarrage de l'Application Frontend
+
+```powershell
+# Accéder au dossier frontend et lancer le serveur Vite
+cd frontend
+npm run dev
+```
+
+L'application est immédiatement accessible à l'adresse : **[http://localhost:5173/](http://localhost:5173/)** (avec proxy API automatique configuré vers `http://localhost:8000`).
+
+### Modules & Fonctionnalités Intégrés
+
+1. **⚡ Temps Réel & Mix National** :
+   - Cartouches KPI temps réel : Consommation nationale (MW), Production totale (MW), Part d'électricité décarbonée (%), Intensité carbone (gCO2/kWh), Solde net aux frontières.
+   - Graphique interactif Recharts (30 minutes) empilé par filière technologique (Nucléaire, Hydraulique, Éolien, Solaire, Bioénergies, Thermique) avec courbe de consommation.
+   - Sélecteur temporel dynamique : 24 heures, 48 heures ou 7 jours.
+   - Baromètre d'interconnexion européen avec les 5 pays frontaliers (Royaume-Uni, Espagne, Italie, Suisse, Allemagne/Belgique).
+2. **📅 Historique Mensuel (2012–2026)** :
+   - Suivi pluriannuel issu de la vue Gold `gold.v_mix_energetique_mensuel`.
+   - Comparaison de la consommation moyenne et des pointes hivernales.
+   - Évolution de la part décarbonée et de la baisse tendancielle de l'intensité CO2.
+   - Filtrage dynamique par millésime.
+3. **🗺️ Registre & Capacités Installées (Enedis 2025)** :
+   - Synthèse nationale du parc de production et stockage (125 885 installations raccordées, ~147 000 MW cumulés).
+   - Palmarès horizontal des 10 premières régions productrices.
+   - Moteur de recherche et filtre instantané par région administrative ou technologie.
+4. **🛡️ Audit & Fiabilité des Données (10/10 PASS)** :
+   - Moniteur interactif affichant le score de qualité parfait de 100.0%.
+   - Présentation détaillée des 10 règles de validation physique, mathématique et d'intégrité relationnelle.
+   - Bouton d'exécution en direct pour recalculer l'audit à la demande.
+5. **🌍 Indicateur International Banque Mondiale** :
+   - Série historique officielle du taux d'électrification (100.0% depuis 1990).
+   - Documentation de la conservation scientifique des 66 points avec indicateur `is_missing`.
+
+---
+
+## 10. Feuille de Route et Avancement
 
 - [x] **Phase 0 — Diagnostic de l'environnement & Cadrage technique** (Python 3.13, Docker, Git, architecture Medallion retenue).
 - [x] **Phase 1 — Audit complet des 3 sources de données** (Vérification des APIs RTE, Enedis, Banque Mondiale; rédaction de [docs/sources.md](docs/sources.md)).
@@ -468,7 +508,8 @@ Le backend expose l'ensemble des données de la couche Gold (tables de faits, di
 - [x] **Phase 8 — Contrôle Qualité, Validation Automatique & Fiabilité** (10 règles SQL automatisées, équilibre physique du réseau validé, rapports d'audit JSON/Markdown, 31 tests unitaires validés).
 - [x] **Phase 9 — Pipeline Complet & Automatisation** (Orchestrateur unifié end-to-end, CLI tout-en-un avec `--stage`, bilan d'exécution synthétique, 36 tests unitaires validés).
 - [x] **Phase 10 — Backend FastAPI** (API RESTful modulaire, 9 routeurs/endpoints, CORS configuré, validation Pydantic v2, 51 tests unitaires avec 94% de couverture).
-- [ ] **Phase 11 — Frontend React Dashboard** *(Prochaine étape)*.
-- [ ] **Phase 12 — Industrialisation Docker & Déploiement**.
+- [x] **Phase 11 — Frontend React Dashboard** (Tableau de bord interactif React + Vite, identité de marque Xamale avec logo et favicon, 5 onglets analytiques, graphiques Recharts, build de production validé).
+- [ ] **Phase 12 — Industrialisation Docker & Déploiement** *(Prochaine étape)*.
+
 
 
