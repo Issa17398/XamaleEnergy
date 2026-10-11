@@ -168,30 +168,40 @@ Copy-Item .env.example .env
 .\.venv\Scripts\pytest -v
 ```
 
-Exemple de résultat attendu (21 tests passés avec succès) :
+Exemple de résultat attendu (31 tests passés avec succès) :
 ```text
-tests/test_enedis_ingestion.py::test_ingest_enedis_success_with_mock PASSED [  4%]
-tests/test_enedis_ingestion.py::test_ingest_enedis_http_error PASSED     [  9%]
-tests/test_enedis_ingestion.py::test_ingest_enedis_idempotence PASSED    [ 14%]
-tests/test_environment.py::test_settings_paths PASSED                    [ 19%]
-tests/test_environment.py::test_settings_ensure_directories PASSED       [ 23%]
-tests/test_environment.py::test_settings_urls_configured PASSED          [ 28%]
-tests/test_environment.py::test_logger_setup PASSED                      [ 33%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_success_with_mock PASSED [  3%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_http_error PASSED     [  6%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_idempotence PASSED    [  9%]
+tests/test_environment.py::test_settings_paths PASSED                    [ 12%]
+tests/test_environment.py::test_settings_ensure_directories PASSED       [ 16%]
+tests/test_environment.py::test_settings_urls_configured PASSED          [ 19%]
+tests/test_environment.py::test_logger_setup PASSED                      [ 22%]
+tests/test_quality.py::test_models_serialization PASSED                  [ 25%]
+tests/test_quality.py::test_markdown_report_generation PASSED            [ 29%]
+tests/test_quality.py::test_export_quality_report PASSED                 [ 32%]
+tests/test_quality.py::test_validator_live_db_checks PASSED              [ 35%]
 tests/test_rte_ingestion.py::test_inspect_csv_file PASSED                [ 38%]
-tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 42%]
-tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 47%]
-tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [ 52%]
-tests/test_transformation.py::TestCleaningUtils::test_clean_column_name_accents_and_units PASSED [ 57%]
-tests/test_transformation.py::TestCleaningUtils::test_clean_column_name_enedis_mappings PASSED [ 61%]
-tests/test_transformation.py::TestRteTransformation::test_rte_silver_transform_filters_forecasts_and_exports_parquet PASSED [ 66%]
-tests/test_transformation.py::TestEnedisTransformation::test_enedis_silver_transform_preserves_strings_and_handles_rejections PASSED [ 71%]
-tests/test_transformation.py::TestWorldBankTransformation::test_world_bank_silver_transform_preserves_missing_and_validates PASSED [ 76%]
-tests/test_world_bank_ingestion.py::test_inspect_world_bank_payload PASSED [ 80%]
-tests/test_world_bank_ingestion.py::test_ingest_world_bank_success_with_mock PASSED [ 85%]
-tests/test_world_bank_ingestion.py::test_ingest_world_bank_http_error PASSED [ 90%]
-tests/test_world_bank_ingestion.py::test_ingest_world_bank_invalid_structure PASSED [ 95%]
+tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 41%]
+tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 45%]
+tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [ 48%]
+tests/test_storage.py::test_settings_database_url PASSED                 [ 51%]
+tests/test_storage.py::test_sql_init_scripts_presence_and_structure PASSED [ 54%]
+tests/test_storage.py::test_map_filiere_code PASSED                      [ 58%]
+tests/test_storage.py::test_dim_temps_feature_engineering PASSED         [ 61%]
+tests/test_storage.py::test_load_fact_worldbank PASSED                   [ 64%]
+tests/test_storage.py::test_load_silver_to_gold_orchestration PASSED     [ 67%]
+tests/test_transformation.py::TestCleaningUtils::test_clean_column_name_accents_and_units PASSED [ 70%]
+tests/test_transformation.py::TestCleaningUtils::test_clean_column_name_enedis_mappings PASSED [ 74%]
+tests/test_transformation.py::TestRteTransformation::test_rte_silver_transform_filters_forecasts_and_exports_parquet PASSED [ 77%]
+tests/test_transformation.py::TestEnedisTransformation::test_enedis_silver_transform_preserves_strings_and_handles_rejections PASSED [ 80%]
+tests/test_transformation.py::TestWorldBankTransformation::test_world_bank_silver_transform_preserves_missing_and_validates PASSED [ 83%]
+tests/test_world_bank_ingestion.py::test_inspect_world_bank_payload PASSED [ 87%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_success_with_mock PASSED [ 90%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_http_error PASSED [ 93%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_invalid_structure PASSED [ 96%]
 tests/test_world_bank_ingestion.py::test_ingest_world_bank_idempotence PASSED [100%]
-====================== 21 passed in 1.33s ======================
+====================== 31 passed in 2.79s ======================
 ```
 
 ### B. Exécuter l'ingestion du flux RTE éCO2mix National (Bronze)
@@ -330,6 +340,38 @@ gold.fact_registre      : 125,885 installations
 gold.fact_worldbank     : 66 observations
 Vues analytiques créées : gold.v_mix_energetique_mensuel, gold.v_capacites_par_region
 ============================================================
+### H. Contrôle Qualité & Audit Automatique des Données (Couche Gold)
+Pour exécuter la suite de 10 contrôles d'intégrité, de physique du réseau et de continuité, et générer les rapports d'audit :
+```powershell
+.\.venv\Scripts\python -m src.energy_observatory.quality.validator
+```
+
+Exemple de rapport généré :
+```text
+======================================================================
+BILAN DU CONTRÔLE QUALITÉ DES DONNÉES (COUCHE GOLD)
+======================================================================
+Statut Global        : PASS
+Score de Qualité     : 100.00%
+Règles Validées      : 10/10
+Avertissements       : 0
+Échecs Critiques     : 0
+Durée d'exécution    : 0.59 s
+----------------------------------------------------------------------
+[OK]   [VOL-01] Volumétrie et couverture temporelle RTE
+[OK]   [TIME-01] Continuité temporelle (pas 30 minutes)
+[OK]   [REF-01] Intégrité référentielle Fact RTE -> Dim Temps
+[OK]   [REF-02] Intégrité référentielle Fact Registre -> Dim Filière
+[OK]   [REF-03] Intégrité référentielle Fact Registre -> Dim Géographie
+[OK]   [PHYS-01] Équilibre physique réseau (Consommation vs Injection nette)
+[OK]   [BOUND-01] Bornes physiques réalistes RTE (Conso, Nucléaire, CO2)
+[OK]   [BOUND-02] Plausibilité des capacités installées Enedis
+[OK]   [NULL-01] Complétude des métriques de production et consommation
+[OK]   [WB-01] Cohérence indicateur Banque Mondiale (Accès électricité FRA)
+======================================================================
+Rapports d'audit générés :
+  - data/reports/data_quality_report_20261011.md
+  - data/reports/data_quality_report_20261011.json
 ```
 
 ---
@@ -357,8 +399,8 @@ Vues analytiques créées : gold.v_mix_energetique_mensuel, gold.v_capacites_par
 - [x] **Phase 5 — Ingestion : Banque Mondiale (Bronze)** (API REST, 66 points 1960-2025, préservation des nulls, métadonnées JSON, tests validés).
 - [x] **Phase 6 — Pipeline de Transformation Silver** (Nettoyage snake_case, typage strict, gestion des auxiliaires, quarantaine des rejets, export Parquet compressé x6.2, 21 tests unitaires validés).
 - [x] **Phase 7 — Modélisation et Stockage PostgreSQL (Couche Gold)** (Docker Compose PostgreSQL 16, modèle dimensionnel en étoile, DDL schémas/tables/vues, loader optimisé COPY, 27 tests unitaires validés).
-- [ ] **Phase 8 — Contrôle Qualité & Fiabilité** *(Prochaine étape)* (Tests de validation automatique Great Expectations / suites de validation des métriques, reporting qualité).
-- [ ] **Phase 9 — Pipeline Complet & Automatisation**.
+- [x] **Phase 8 — Contrôle Qualité, Validation Automatique & Fiabilité** (10 règles SQL automatisées, équilibre physique du réseau validé, rapports d'audit JSON/Markdown, 31 tests unitaires validés).
+- [ ] **Phase 9 — Pipeline Complet & Automatisation** *(Prochaine étape)* (Orchestrateur unifié end-to-end, CLI tout-en-un, idempotence et reprises sur incident).
 - [ ] **Phase 10 — Backend FastAPI**.
 - [ ] **Phase 11 — Frontend React Dashboard**.
 - [ ] **Phase 12 — Industrialisation Docker & Déploiement**.
