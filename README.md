@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Etalab%202.0%20%2F%20MIT-green.svg)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/)
 [![Architecture](https://img.shields.io/badge/architecture-Medallion%20(Bronze%20%2F%20Silver%20%2F%20Gold)-orange.svg)](#architecture-data-engineering)
-[![Status](https://img.shields.io/badge/phase-Phase%204%20(Ingestion%20Enedis%20Validée)-success.svg)](#feuille-de-route-et-avancement)
+[![Status](https://img.shields.io/badge/phase-Phase%205%20(Ingestion%20Banque%20Mondiale%20Validée)-success.svg)](#feuille-de-route-et-avancement)
 
 ---
 
@@ -111,7 +111,8 @@ French_energy/
 │       ├── ingestion/
 │       │   ├── __init__.py
 │       │   ├── rte.py              # Ingestion résiliente RTE éCO2mix (Couche Bronze)
-│       │   └── enedis.py           # Ingestion Registre National des installations (Couche Bronze)
+│       │   ├── enedis.py           # Ingestion Registre National des installations (Couche Bronze)
+│       │   └── world_bank.py       # Ingestion indicateurs Banque Mondiale (Couche Bronze)
 │       └── utils/
 │           ├── __init__.py
 │           └── logging_config.py   # Configuration standardisée des logs (console + fichier)
@@ -120,7 +121,8 @@ French_energy/
     ├── __init__.py
     ├── test_environment.py        # Tests automatisés de l'environnement et des settings
     ├── test_rte_ingestion.py      # Tests d'ingestion RTE (streaming, SHA-256, résilience HTTP)
-    └── test_enedis_ingestion.py   # Tests d'ingestion Enedis (millésime 2025, idempotence)
+    ├── test_enedis_ingestion.py   # Tests d'ingestion Enedis (millésime 2025, idempotence)
+    └── test_world_bank_ingestion.py # Tests d'ingestion Banque Mondiale (JSON, nulls, validation)
 ```
 
 ---
@@ -166,20 +168,25 @@ Copy-Item .env.example .env
 .\.venv\Scripts\pytest -v
 ```
 
-Exemple de résultat attendu (11 tests passés avec succès) :
+Exemple de résultat attendu (16 tests passés avec succès) :
 ```text
-tests/test_enedis_ingestion.py::test_ingest_enedis_success_with_mock PASSED [  9%]
-tests/test_enedis_ingestion.py::test_ingest_enedis_http_error PASSED     [ 18%]
-tests/test_enedis_ingestion.py::test_ingest_enedis_idempotence PASSED    [ 27%]
-tests/test_environment.py::test_settings_paths PASSED                    [ 36%]
-tests/test_environment.py::test_settings_ensure_directories PASSED       [ 45%]
-tests/test_environment.py::test_settings_urls_configured PASSED          [ 54%]
-tests/test_environment.py::test_logger_setup PASSED                      [ 63%]
-tests/test_rte_ingestion.py::test_inspect_csv_file PASSED                [ 72%]
-tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 81%]
-tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 90%]
-tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [100%]
-====================== 11 passed in 0.55s ======================
+tests/test_enedis_ingestion.py::test_ingest_enedis_success_with_mock PASSED [  6%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_http_error PASSED     [ 12%]
+tests/test_enedis_ingestion.py::test_ingest_enedis_idempotence PASSED    [ 18%]
+tests/test_environment.py::test_settings_paths PASSED                    [ 25%]
+tests/test_environment.py::test_settings_ensure_directories PASSED       [ 31%]
+tests/test_environment.py::test_settings_urls_configured PASSED          [ 37%]
+tests/test_environment.py::test_logger_setup PASSED                      [ 43%]
+tests/test_rte_ingestion.py::test_inspect_csv_file PASSED                [ 50%]
+tests/test_rte_ingestion.py::test_ingest_rte_success_with_mock PASSED    [ 56%]
+tests/test_rte_ingestion.py::test_ingest_rte_http_error PASSED           [ 62%]
+tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [ 68%]
+tests/test_world_bank_ingestion.py::test_inspect_world_bank_payload PASSED [ 75%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_success_with_mock PASSED [ 81%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_http_error PASSED [ 87%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_invalid_structure PASSED [ 93%]
+tests/test_world_bank_ingestion.py::test_ingest_world_bank_idempotence PASSED [100%]
+====================== 16 passed in 1.89s ======================
 ```
 
 ### B. Exécuter l'ingestion du flux RTE éCO2mix National (Bronze)
@@ -187,31 +194,38 @@ tests/test_rte_ingestion.py::test_ingest_rte_idempotence PASSED          [100%]
 .\.venv\Scripts\python -m src.energy_observatory.ingestion.rte
 ```
 
-> **Options disponibles :**
-> - Exécution normale : vérifie si le fichier existe déjà. Idempotence automatique.
-> - Forcer le re-téléchargement : `.\.venv\Scripts\python -m src.energy_observatory.ingestion.rte --force`
-
 ### C. Exécuter l'ingestion du Registre National Enedis (Bronze)
 ```powershell
 .\.venv\Scripts\python -m src.energy_observatory.ingestion.enedis
 ```
 
+### D. Exécuter l'ingestion de la Banque Mondiale (Bronze)
+```powershell
+.\.venv\Scripts\python -m src.energy_observatory.ingestion.world_bank
+```
+
 > **Options disponibles :**
-> - Exécution normale : vérifie si le fichier existe déjà. Idempotence automatique.
-> - Forcer le re-téléchargement : `.\.venv\Scripts\python -m src.energy_observatory.ingestion.enedis --force`
+> - Exécution normale : interroge l'API pour la France (`FRA`) et l'indicateur d'accès (`EG.ELC.ACCS.ZS`).
+> - Forcer le re-téléchargement : `.\.venv\Scripts\python -m src.energy_observatory.ingestion.world_bank --force`
+> - Cibler un autre pays ou indicateur :
+>   ```powershell
+>   .\.venv\Scripts\python -m src.energy_observatory.ingestion.world_bank --country FRA --indicator EG.ELC.ACCS.ZS
+>   ```
 
 Exemple de rapport d'ingestion généré :
 ```text
---- Rapport d'ingestion Registre National ---
+--- Rapport d'ingestion Banque Mondiale ---
 Statut : SUCCESS
-Source : ENEDIS_REGISTRE_INSTALLATIONS
-Millésime : 2025-12-31
-Fichier brut : .../data/raw/enedis/enedis_registre_2025_20261011.csv
-Taille : 38.65 Mo
-SHA-256 : 2e5464e4e556f9ecf47d4f3c76d0dd0119f6f1a4d973c3f483addac302b4e702
-Nombre de lignes : 125,930
-Nombre de colonnes : 51
-Durée : ~11 s
+Indicateur : EG.ELC.ACCS.ZS (Access to electricity (% of population))
+Pays : FRA
+Fichier brut : .../data/raw/world_bank/worldbank_FRA_EG_ELC_ACCS_ZS_20261011.json
+Taille : 14314 octets
+SHA-256 : 6835f2b00dc123d19327bd125221d844125c1ede8d94c242f62c5a474a88c345
+Total observations : 66
+Observations valides : 35
+Observations nulles (manquantes) : 31
+Période couverte : 1960 - 2025
+Durée : ~2 s
 ```
 
 ---
@@ -223,8 +237,8 @@ Durée : ~11 s
 - [x] **Phase 2 — Mise en place de l'environnement & Outillage** (`pyproject.toml`, `.gitignore`, `.env`, `settings.py`, `logging_config.py`, tests automatisés).
 - [x] **Phase 3 — Première Ingestion : RTE éCO2mix National (Bronze)** (Module streaming résilient, 514 272 lignes, 37 colonnes, métadonnées JSON, tests validés).
 - [x] **Phase 4 — Ingestion : Enedis Registre National (Bronze)** (Millésime 31/12/2025, 125 930 installations, 51 colonnes, métadonnées JSON, tests validés).
-- [ ] **Phase 5 — Ingestion : Banque Mondiale (Bronze)** *(Prochaine étape)*.
-- [ ] **Phase 6 — Pipeline de Transformation Silver** (Nettoyage, harmonisation des pas 30 min, détection des anomalies).
+- [x] **Phase 5 — Ingestion : Banque Mondiale (Bronze)** (API REST, 66 points 1960-2025, préservation des nulls, métadonnées JSON, tests validés).
+- [ ] **Phase 6 — Pipeline de Transformation Silver** *(Prochaine étape)* (Nettoyage, harmonisation des pas 30 min, détection des anomalies).
 - [ ] **Phase 7 — Modélisation et Stockage PostgreSQL** (Couche Gold, modélisation dimensionnelle).
 - [ ] **Phase 8 — Contrôle Qualité & Fiabilité** (Tests de validation, règles métier, rapports qualité).
 - [ ] **Phase 9 — Pipeline Complet & Automatisation**.
