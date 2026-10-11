@@ -136,6 +136,14 @@ class Settings:
         ]:
             path.mkdir(parents=True, exist_ok=True)
 
+    @property
+    def database_url(self) -> str:
+        """Retourne l'URI de connexion SQLAlchemy à PostgreSQL."""
+        return (
+            f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+
     def to_dict(self) -> Dict[str, Any]:
         """Exporte la configuration sous forme de dictionnaire non-sensible."""
         return {
