@@ -40,6 +40,7 @@ class Settings:
     DATA_RAW_DIR: Path = field(init=False)
     DATA_PROCESSED_DIR: Path = field(init=False)
     DATA_REJECTED_DIR: Path = field(init=False)
+    DATA_REPORTS_DIR: Path = field(init=False)
     RTE_RAW_DIR: Path = field(init=False)
     ENEDIS_RAW_DIR: Path = field(init=False)
     WORLDBANK_RAW_DIR: Path = field(init=False)
@@ -114,10 +115,12 @@ class Settings:
         raw_dir = base / os.getenv("DATA_RAW_DIR", "data/raw")
         proc_dir = base / os.getenv("DATA_PROCESSED_DIR", "data/processed")
         rej_dir = base / os.getenv("DATA_REJECTED_DIR", "data/rejected")
+        rep_dir = base / os.getenv("DATA_REPORTS_DIR", "data/reports")
 
         object.__setattr__(self, "DATA_RAW_DIR", raw_dir)
         object.__setattr__(self, "DATA_PROCESSED_DIR", proc_dir)
         object.__setattr__(self, "DATA_REJECTED_DIR", rej_dir)
+        object.__setattr__(self, "DATA_REPORTS_DIR", rep_dir)
 
         object.__setattr__(self, "RTE_RAW_DIR", raw_dir / "rte")
         object.__setattr__(self, "ENEDIS_RAW_DIR", raw_dir / "enedis")
@@ -129,6 +132,7 @@ class Settings:
             self.DATA_RAW_DIR,
             self.DATA_PROCESSED_DIR,
             self.DATA_REJECTED_DIR,
+            self.DATA_REPORTS_DIR,
             self.RTE_RAW_DIR,
             self.ENEDIS_RAW_DIR,
             self.WORLDBANK_RAW_DIR,
