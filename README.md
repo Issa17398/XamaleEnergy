@@ -7,6 +7,10 @@
 [![License](https://img.shields.io/badge/license-Etalab%202.0%20%2F%20MIT-green.svg)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/)
 [![Architecture](https://img.shields.io/badge/architecture-Medallion%20(Bronze%20%2F%20Silver%20%2F%20Gold)-orange.svg)](#architecture-data-engineering)
 [![Status](https://img.shields.io/badge/phase-Phase%2011%20(Frontend%20React%20Validé)-success.svg)](#feuille-de-route-et-avancement)
+[![Guide Débutant](https://img.shields.io/badge/cours-Guide%20du%20Data%20Engineer-blueviolet.svg)](docs/GUIDE_DATA_ENGINEERING.md)
+
+> 🎓 **Vous débutez en ingénierie de données ?**  
+> Consultez notre guide illustré pas-à-pas pour débutant : **[docs/GUIDE_DATA_ENGINEERING.md](docs/GUIDE_DATA_ENGINEERING.md)**. Il décortique l'ensemble du projet sans jargon, explique chaque choix technique, et vous montre concrètement comment raisonne un Data Engineer.
 
 ---
 
