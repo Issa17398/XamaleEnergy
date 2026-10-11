@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-11T11:36:33.558229+00:00",
+  "timestamp": "2026-10-11T11:49:54.514661+00:00",
   "overall_status": "PASS",
   "score_pct": 100.0,
   "summary": {
@@ -7,7 +7,7 @@
     "passed": 10,
     "warn": 0,
     "failed": 0,
-    "duration_seconds": 0.59
+    "duration_seconds": 0.56
   },
   "checks": [
     {
