@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Etalab%202.0%20%2F%20MIT-green.svg)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/)
 [![Architecture](https://img.shields.io/badge/architecture-Medallion%20(Bronze%20%2F%20Silver%20%2F%20Gold)-orange.svg)](#architecture-data-engineering)
-[![Status](https://img.shields.io/badge/phase-Phase%205%20(Ingestion%20Banque%20Mondiale%20Validée)-success.svg)](#feuille-de-route-et-avancement)
+[![Status](https://img.shields.io/badge/phase-Phase%206%20(Couche%20Silver%20Validée)-success.svg)](#feuille-de-route-et-avancement)
 
 ---
 
@@ -282,6 +282,19 @@ BILAN COMPLET DU PIPELINE DE TRANSFORMATION SILVER
   - Colonnes (9)     : indicator_id, indicator_name, country_iso2, year, valeur_pct, is_missing...
   - Durée            : ~0.01 s
 ======================================================================
+```
+
+### F. Inspecter les données Silver (Statistiques, distributions et extraits)
+Un outil d'exploration analytique dédié permet d'inspecter en direct les volumétries, distributions et échantillons :
+```powershell
+# Inspection complète des 3 sources + quarantaine des rejets
+.\.venv\Scripts\python -m src.energy_observatory.analysis.inspect_silver
+
+# Ou cibler une source en particulier
+.\.venv\Scripts\python -m src.energy_observatory.analysis.inspect_silver --source rte
+.\.venv\Scripts\python -m src.energy_observatory.analysis.inspect_silver --source enedis
+.\.venv\Scripts\python -m src.energy_observatory.analysis.inspect_silver --source worldbank
+.\.venv\Scripts\python -m src.energy_observatory.analysis.inspect_silver --source rejects
 ```
 
 ---
