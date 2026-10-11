@@ -267,10 +267,11 @@ BILAN COMPLET DU PIPELINE DE TRANSFORMATION SILVER
 [Source] ENEDIS_REGISTRE_INSTALLATIONS
   - Statut           : SUCCESS
   - Lignes entrantes : 125,930
-  - Lignes valides   : 125,930
-  - Lignes rejetées  : 0
+  - Lignes valides   : 125,885
+  - Lignes rejetées  : 45 (33 sans capacité, 12 sans géographie)
   - Fichier Parquet  : data/processed/silver_enedis_registre_2025.parquet (6.1 Mo, compression x6.3)
-  - Colonnes (51)    : nom_installation, code_eic, code_iris, code_insee_commune...
+  - Fichier rejets   : data/rejected/enedis_rejected_20261011.csv
+  - Colonnes (33)    : nom_installation, code_eic, code_iris, code_insee_commune, commune... (18 colonnes mortes/redondantes éliminées)
   - Durée            : ~2.4 s
 
 [Source] WORLDBANK_ACCESS_ELECTRICITY

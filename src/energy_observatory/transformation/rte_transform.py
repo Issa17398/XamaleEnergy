@@ -91,54 +91,35 @@ def transform_rte_national_bronze_to_silver(
     is_realized = df["consommation_mw"].notna()
     df_real = df[is_realized].copy()
 
-    # Conversion numérique stricte des colonnes de mesure
-    numeric_cols = [
-        "consommation_mw",
-        "prevision_j1_mw",
-        "prevision_j_mw",
-        "fioul_mw",
-        "charbon_mw",
-        "gaz_mw",
-        "nucleaire_mw",
-        "eolien_mw",
-        "solaire_mw",
-        "hydraulique_mw",
-        "pompage_mw",
-        "bioenergies_mw",
-        "ech_physiques_mw",
-        "taux_co2_g_kwh",
-    ]
-    for col in numeric_cols:
-        if col in df_real.columns:
-            df_real[col] = pd.to_numeric(df_real[col], errors="coerce")
+    # Conversion numérique stricte de toutes les colonnes de mesure et échanges
+    exclude_cols = {"perimetre", "nature", "date", "heure", "date_heure"}
+    for col in df_real.columns:
+        if col not in exclude_cols:
+            df_real[col] = pd.to_numeric(
+                df_real[col].astype(str).str.strip().replace(["ND", "-", "", "nan"], pd.NA),
+                errors="coerce",
+            )
 
     # 6. Contrôles qualité et détection des anomalies
-    rejected_masks = []
-    rejection_reasons = []
+    df_real["rejection_reason"] = pd.NA
 
     # Règle Q1 : Timestamp valide
     invalid_date = df_real["date_heure"].isna()
     if invalid_date.any():
-        rejected_masks.append(invalid_date)
-        rejection_reasons.append("Date_heure invalide ou non parsable")
+        df_real.loc[invalid_date, "rejection_reason"] = "Date_heure invalide ou non parsable"
 
     # Règle Q2 : Consommation positive
     invalid_conso = df_real["consommation_mw"] <= 0
     if invalid_conso.any():
-        rejected_masks.append(invalid_conso)
-        rejection_reasons.append("Consommation <= 0 MW")
+        df_real.loc[invalid_conso & df_real["rejection_reason"].isna(), "rejection_reason"] = "Consommation <= 0 MW ou manquante"
 
     # Règle Q3 : Filières de production (traitement des auxiliaires et détection d'aberrations)
-    # En réseau électrique, une installation à l'arrêt soutire une faible puissance pour ses auxiliaires
-    # (ex: onduleurs solaires la nuit à -1 MW, centrales à l'arrêt à -15 MW).
-    # La production brute est bornée à 0.0 MW (clipping), tandis que les aberrations sévères (< -500 MW) sont rejetées.
     prod_cols = [c for c in ["nucleaire_mw", "eolien_mw", "solaire_mw", "hydraulique_mw", "gaz_mw", "charbon_mw", "fioul_mw", "bioenergies_mw"] if c in df_real.columns]
     for p_col in prod_cols:
         severe_negative = df_real[p_col] < -500.0
         if severe_negative.any():
-            rejected_masks.append(severe_negative)
-            rejection_reasons.append(f"Aberration de production sévère sur {p_col} (< -500 MW)")
-        
+            df_real.loc[severe_negative & df_real["rejection_reason"].isna(), "rejection_reason"] = f"Aberration de production sévère sur {p_col} (< -500 MW)"
+
         # Ramener les soutirages minimes d'auxiliaires à 0.0 MW
         aux_mask = (df_real[p_col] < 0) & (df_real[p_col] >= -500.0)
         aux_count = aux_mask.sum()
@@ -149,40 +130,32 @@ def transform_rte_national_bronze_to_silver(
     if "taux_co2_g_kwh" in df_real.columns:
         invalid_co2 = df_real["taux_co2_g_kwh"] < 0
         if invalid_co2.any():
-            rejected_masks.append(invalid_co2)
-            rejection_reasons.append("Taux de CO2 négatif")
+            df_real.loc[invalid_co2 & df_real["rejection_reason"].isna(), "rejection_reason"] = "Taux de CO2 négatif"
 
-    # Règle Q5 : Dédoublonnage sur date_heure
+    # Règle Q5 : Dédoublonnage sur date_heure (ex: passage à l'heure d'hiver)
     dup_mask = df_real.duplicated(subset=["date_heure"], keep="first")
     if dup_mask.any():
-        rejected_masks.append(dup_mask)
-        rejection_reasons.append("Doublon temporel sur date_heure")
+        df_real.loc[dup_mask & df_real["rejection_reason"].isna(), "rejection_reason"] = "Doublon temporel UTC (transition heure d'été/hiver)"
 
     # Agrégation des rejets
     rejected_rows_count = 0
     rejected_path_str: Optional[str] = None
+    is_rejected = df_real["rejection_reason"].notna()
 
-    if rejected_masks:
-        combined_rejected = pd.concat([m for m in rejected_masks], axis=1).any(axis=1)
-        if combined_rejected.any():
-            df_rej = df_real[combined_rejected].copy()
-            df_rej["rejection_reason"] = "Anomalie détectée"
-            rejected_rows_count = len(df_rej)
+    if is_rejected.any():
+        df_rej = df_real[is_rejected].copy()
+        rejected_rows_count = len(df_rej)
 
-            date_tag = datetime.now(timezone.utc).strftime("%Y%m%d")
-            rej_file = rej_dir / f"rte_rejected_{date_tag}.csv"
-            df_rej.to_csv(rej_file, index=False, sep=";", encoding="utf-8")
-            rejected_path_str = str(rej_file)
-            logger.warning(
-                f"[RTE Silver] {rejected_rows_count} lignes rejetées consignées dans {rej_file}"
-            )
-
-            # Ne conserver que les lignes valides
-            df_valid = df_real[~combined_rejected].copy()
-        else:
-            df_valid = df_real
+        date_tag = datetime.now(timezone.utc).strftime("%Y%m%d")
+        rej_file = rej_dir / f"rte_rejected_{date_tag}.csv"
+        df_rej.to_csv(rej_file, index=False, sep=";", encoding="utf-8")
+        rejected_path_str = str(rej_file)
+        logger.warning(
+            f"[RTE Silver] {rejected_rows_count} lignes rejetées consignées dans {rej_file}"
+        )
+        df_valid = df_real[~is_rejected].copy().drop(columns=["rejection_reason"])
     else:
-        df_valid = df_real
+        df_valid = df_real.copy().drop(columns=["rejection_reason"])
 
     # Tri chronologique garanti
     df_valid.sort_values(by="date_heure", ascending=True, inplace=True)

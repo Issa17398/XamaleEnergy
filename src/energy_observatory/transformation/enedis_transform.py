@@ -154,57 +154,68 @@ def transform_enedis_registre_bronze_to_silver(
             else:
                 df[col] = pd.to_datetime(df[col], errors="coerce", format="mixed", dayfirst=True)
 
-    # 7. Contrôles qualité et détection des rejets
-    rejected_masks = []
-    rejection_reasons = []
+    # 6. Élimination des colonnes 100% vides, quasi-vides (>85% nulls sans valeur analytique) ou redondantes
+    empty_and_redundant_cols = [
+        "energie_annuelle_glissante_stockee_kwh",   # 100% NULL
+        "date_deraccordement",                      # 99.98% NULL
+        "codes_combustibles_secondaires",           # 99.96% NULL
+        "combustibles_secondaires",                 # 99.96% NULL
+        "type_stockage",                            # 99.40% NULL
+        "energie_annuelle_glissante_produite_kwh",  # 99.25% NULL
+        "combustible",                              # 98.79% NULL
+        "code_combustible",                         # 96.85% NULL
+        "code_iris_commune_implantation",           # 92.21% NULL
+        "puis_max_installee_discharge_kw",          # 91.40% NULL
+        "energie_annuelle_glissante_soutiree_kwh",  # 91.32% NULL
+        "puis_max_rac_charge_kw",                   # 91.08% NULL
+        "puis_max_charge_kw",                       # 91.05% NULL
+        "nb_groupes",                               # 85.10% NULL
+        "code_s3renr",                              # 74.05% NULL
+        "code_insee_commune_implantation",          # Redondant avec code_insee_commune
+        "max_puis_kw",                              # Doublon strict de puis_max_installee_kw
+        "date_mise_en_service_iso",                 # Doublon de date_mise_en_service
+    ]
+    dropped = [c for c in empty_and_redundant_cols if c in df.columns]
+    df.drop(columns=dropped, inplace=True)
+    logger.info(f"[Enedis Silver] {len(dropped)} colonnes vides/redondantes éliminées : {dropped}")
 
-    # Règle Q1 : PuisMaxInstallee >= 0 (si non nul)
+    # 7. Contrôles qualité stricts et détection des anomalies
+    df["rejection_reason"] = pd.NA
+
+    # Règle Q1 : Capacité installée positive et non nulle (élimine les lignes sans information de puissance)
     if "puis_max_installee_kw" in df.columns:
-        invalid_capacity = df["puis_max_installee_kw"] < 0
-        if invalid_capacity.any():
-            rejected_masks.append(invalid_capacity)
-            rejection_reasons.append("puis_max_installee_kw < 0")
+        invalid_capacity = df["puis_max_installee_kw"].isna() | (df["puis_max_installee_kw"] <= 0)
+        df.loc[invalid_capacity & df["rejection_reason"].isna(), "rejection_reason"] = "Capacité installée manquante ou <= 0 kW"
 
-    # Règle Q2 : Filière non vide
+    # Règle Q2 : Filière non vide et valide
     if "filiere" in df.columns:
         invalid_filiere = df["filiere"].isna() | (df["filiere"].str.strip() == "")
-        if invalid_filiere.any():
-            rejected_masks.append(invalid_filiere)
-            rejection_reasons.append("filiere absente ou vide")
+        df.loc[invalid_filiere & df["rejection_reason"].isna(), "rejection_reason"] = "Filière de production manquante"
 
-    # Règle Q3 : Ligne entièrement vide sur les coordonnées/identifiants essentiels
-    if "commune" in df.columns and "code_departement" in df.columns:
-        empty_row = (
-            df["commune"].isna()
-            & df["code_departement"].isna()
-            & df["puis_max_installee_kw"].isna()
-        )
-        if empty_row.any():
-            rejected_masks.append(empty_row)
-            rejection_reasons.append("Ligne sans localisation ni capacité")
+    # Règle Q3 : Localisation géographique minimale (élimine les lignes fantômes sans commune, ni dpt, ni région)
+    geo_cols = [c for c in ["commune", "code_departement", "region"] if c in df.columns]
+    if geo_cols:
+        no_geo = df[geo_cols].isna().all(axis=1)
+        df.loc[no_geo & df["rejection_reason"].isna(), "rejection_reason"] = "Localisation géographique totalement absente"
 
     rejected_rows_count = 0
     rejected_path_str: Optional[str] = None
+    is_rejected = df["rejection_reason"].notna()
 
-    if rejected_masks:
-        combined_rejected = pd.concat([m for m in rejected_masks], axis=1).any(axis=1)
-        if combined_rejected.any():
-            df_rej = df[combined_rejected].copy()
-            df_rej["rejection_reason"] = "Anomalie Enedis détectée"
-            rejected_rows_count = len(df_rej)
+    if is_rejected.any():
+        df_rej = df[is_rejected].copy()
+        rejected_rows_count = len(df_rej)
 
-            date_tag = datetime.now(timezone.utc).strftime("%Y%m%d")
-            rej_file = rej_dir / f"enedis_rejected_{date_tag}.csv"
-            df_rej.to_csv(rej_file, index=False, sep=";", encoding="utf-8")
-            rejected_path_str = str(rej_file)
-            logger.warning(
-                f"[Enedis Silver] {rejected_rows_count} lignes rejetées consignées dans {rej_file}"
-            )
-            df_valid = df[~combined_rejected].copy()
-        else:
-            df_valid = df.copy()
+        date_tag = datetime.now(timezone.utc).strftime("%Y%m%d")
+        rej_file = rej_dir / f"enedis_rejected_{date_tag}.csv"
+        df_rej.to_csv(rej_file, index=False, sep=";", encoding="utf-8")
+        rejected_path_str = str(rej_file)
+        logger.warning(
+            f"[Enedis Silver] {rejected_rows_count} lignes rejetées consignées dans {rej_file}"
+        )
+        df_valid = df[~is_rejected].copy().drop(columns=["rejection_reason"])
     else:
-        df_valid = df.copy()
+        df_valid = df.copy().drop(columns=["rejection_reason"])
 
     # Dédoublonnage exact si des lignes sont 100% identiques
     df_valid.drop_duplicates(inplace=True)
