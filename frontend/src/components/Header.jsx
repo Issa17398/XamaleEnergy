@@ -40,7 +40,7 @@ export default function Header({
           </div>
           <div className="brand-text">
             <div className="brand-title-row">
-              <span className="brand-name">XAMALE</span>
+              <span className="brand-name">XamaleEnergy</span>
               <span className="brand-tag">OBSERVATOIRE ÉNERGÉTIQUE</span>
             </div>
             <p className="brand-subtitle">

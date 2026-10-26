@@ -146,7 +146,7 @@ export default function App() {
       <footer className="footer-container">
         <div className="footer-content">
           <div className="footer-left">
-            <span className="footer-brand">XAMALE • OBSERVATOIRE DES DONNÉES ÉNERGÉTIQUES</span>
+            <span className="footer-brand">XAMALEENERGY • OBSERVATOIRE DES DONNÉES ÉNERGÉTIQUES</span>
             <p className="footer-desc">
               Architecture Data Engineering Médaillon (Bronze • Silver • Gold) & Pipeline Open Data officiel.
             </p>

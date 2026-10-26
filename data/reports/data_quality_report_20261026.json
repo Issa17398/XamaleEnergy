@@ -1,0 +1,145 @@
+{
+  "timestamp": "2026-10-26T16:22:38.348572+00:00",
+  "overall_status": "PASS",
+  "score_pct": 100.0,
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "warn": 0,
+    "failed": 0,
+    "duration_seconds": 0.66
+  },
+  "checks": [
+    {
+      "check_id": "VOL-01",
+      "name": "Volumétrie et couverture temporelle RTE",
+      "category": "Volumétrie & Typage",
+      "status": "PASS",
+      "metric_value": 257105.0,
+      "threshold": 250000.0,
+      "message": "257,105 lignes détectées entre 2011-12-31 23:00:00+00:00 et 2026-08-31 21:30:00+00:00.",
+      "details": {
+        "min_date": "2011-12-31 23:00:00+00:00",
+        "max_date": "2026-08-31 21:30:00+00:00",
+        "total_rows": 257105
+      }
+    },
+    {
+      "check_id": "TIME-01",
+      "name": "Continuité temporelle (pas 30 minutes)",
+      "category": "Complétude & Fraîcheur",
+      "status": "PASS",
+      "metric_value": 99.9942,
+      "threshold": 99.9,
+      "message": "Taux de continuité : 99.9942% (15 écarts temporels > 30 min sur 257,104 intervalles).",
+      "details": {
+        "total_intervals": 257104,
+        "gaps_count": 15,
+        "continuity_pct": 99.99416578505196
+      }
+    },
+    {
+      "check_id": "REF-01",
+      "name": "Intégrité référentielle Fact RTE -> Dim Temps",
+      "category": "Intégrité Référentielle",
+      "status": "PASS",
+      "metric_value": 0.0,
+      "threshold": 0.0,
+      "message": "Orphelins temporels détectés : 0.",
+      "details": {
+        "orphan_count": 0
+      }
+    },
+    {
+      "check_id": "REF-02",
+      "name": "Intégrité référentielle Fact Registre -> Dim Filière",
+      "category": "Intégrité Référentielle",
+      "status": "PASS",
+      "metric_value": 0.0,
+      "threshold": 0.0,
+      "message": "Installations sans filière valide : 0.",
+      "details": {
+        "orphan_count": 0
+      }
+    },
+    {
+      "check_id": "REF-03",
+      "name": "Intégrité référentielle Fact Registre -> Dim Géographie",
+      "category": "Intégrité Référentielle",
+      "status": "PASS",
+      "metric_value": 0.0,
+      "threshold": 0.0,
+      "message": "Codes INSEE non référencés dans la dimension géographique : 0.",
+      "details": {
+        "invalid_insee_count": 0
+      }
+    },
+    {
+      "check_id": "PHYS-01",
+      "name": "Équilibre physique réseau (Consommation vs Injection nette)",
+      "category": "Cohérence Physique & Bilan Énergétique",
+      "status": "PASS",
+      "metric_value": 0.933,
+      "threshold": 2.0,
+      "message": "Écart médian réseau : 0.93% (seuil <= 2.0%). Écart moyen : 3.52% (pertes transport/distribution attendues 3-5%). Conformité tolérance 10% : 87.59%.",
+      "details": {
+        "ecart_median_pct": 0.932966720394425,
+        "ecart_moyen_pct": 3.517527892023964,
+        "compliance_10pct": 87.58639466365882,
+        "total_points": 257105
+      }
+    },
+    {
+      "check_id": "BOUND-01",
+      "name": "Bornes physiques réalistes RTE (Conso, Nucléaire, CO2)",
+      "category": "Bornes Plausibles & Plages de Valeurs",
+      "status": "PASS",
+      "metric_value": 100.0,
+      "threshold": 100.0,
+      "message": "0 valeurs hors limites physiques sur 257,105 mesures.",
+      "details": {
+        "bad_conso": 0,
+        "bad_nuc": 0,
+        "bad_co2": 0
+      }
+    },
+    {
+      "check_id": "BOUND-02",
+      "name": "Plausibilité des capacités installées Enedis",
+      "category": "Bornes Plausibles & Plages de Valeurs",
+      "status": "PASS",
+      "metric_value": 100.0,
+      "threshold": 100.0,
+      "message": "Capacités hors limites (> 0 kW et <= 2 GW) : 0/125,885.",
+      "details": {
+        "bad_capacity_count": 0,
+        "total_installations": 125885
+      }
+    },
+    {
+      "check_id": "NULL-01",
+      "name": "Complétude des métriques de production et consommation",
+      "category": "Complétude & Fraîcheur",
+      "status": "PASS",
+      "metric_value": 0.0,
+      "threshold": 0.0,
+      "message": "0 valeurs nulles détectées sur les métriques clés de production et consommation.",
+      "details": {
+        "null_metrics_count": 0
+      }
+    },
+    {
+      "check_id": "WB-01",
+      "name": "Cohérence indicateur Banque Mondiale (Accès électricité FRA)",
+      "category": "Bornes Plausibles & Plages de Valeurs",
+      "status": "PASS",
+      "metric_value": 66.0,
+      "threshold": 66.0,
+      "message": "66 observations annuelles, 0 valeurs aberrantes hors 90-100%.",
+      "details": {
+        "total_observations": 66,
+        "out_of_bounds": 0
+      }
+    }
+  ]
+}
